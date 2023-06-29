@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:free_budget/models/category.dart';
+import 'package:intl/intl.dart';
 
 import '../models/expense.dart';
 
@@ -116,8 +117,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Chip(label: Text("${startDate.day}/${startDate.month}/${startDate.year}")),
-                Chip(label: Text("${endDate.day}/${endDate.month}/${endDate.year}")),
+                Chip(label: Text(DateFormat('dd/MM/yyyy').format(startDate))),
+                Chip(label: Text(DateFormat('dd/MM/yyyy').format(endDate))),
               ],
             ),
             Row(

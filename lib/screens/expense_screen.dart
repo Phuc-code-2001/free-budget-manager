@@ -350,62 +350,128 @@ class ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final uniqueDates = getUniqueDates();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expenses'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(4.0),
         child: ListView.builder(
-          itemCount: getUniqueDates().length,
+          itemCount: uniqueDates.length,
           itemBuilder: (context, index) {
-            DateTime date = getUniqueDates()[index];
+            DateTime date = uniqueDates[index];
             List<Expense> expensesByDate = getExpensesByDate(date);
             double totalAmount =
                 expensesByDate.fold(0, (sum, expense) => sum + expense.amount);
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Text(DateFormat('dd/MM/yyyy').format(date)),
-                    trailing: Text("Total: ${totalAmount.toStringAsFixed(0)}"),
+
+            return Column(
+              children: [
+                Card(
+                  color: Colors.lightBlue,
+                  child: ListTile(
+                    leading: Chip(
+                      label: Text(DateFormat('dd/MM/yyyy').format(date)),
+                      labelStyle: const TextStyle(color: Colors.black),
+                      backgroundColor: Colors.white,
+                    ),
+                    trailing: Chip(
+                        label: Text("Total: ${totalAmount.toStringAsFixed(0)}"),
+                        labelStyle: const TextStyle(color: Colors.blue),
+                        backgroundColor: Colors.white,
+                    ),
                   ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const ClampingScrollPhysics(),
-                    itemCount: expensesByDate.length,
-                    itemBuilder: (context, index) {
-                      Expense expense = expensesByDate[index];
-                      return ListTile(
-                        leading: Text(expense.category.iconText,
-                            style: const TextStyle(fontSize: 16)),
-                        title: Text(expense.category.name),
-                        subtitle: Text(expense.name),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(expense.amount.toStringAsFixed(0)),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
+                ),
+                ...expensesByDate.map((expense) => Padding(
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                  child: Card(
+                    color: Colors.lightBlueAccent,
+                    child: ListTile(
+                      titleAlignment: ListTileTitleAlignment.center,
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        child: Text(expense.category.iconText),
+                      ),
+                      title: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Ink(
+                            decoration: const ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(4))
+                              ),
+                              color: Colors.amberAccent
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0, top: 2.0, right: 8.0, bottom: 2.0),
+                              child: Text(
+                                expense.category.name, 
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                )
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(left: 2.0, top: 2.0),
+                        child: Text(
+                          expense.name,
+                          style: const TextStyle(
+                            color: Colors.black
+                          ),
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            expense.amount.toStringAsFixed(0),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            )
+                          ),
+                          const SizedBox(width: 8),
+                          Ink(
+                            decoration: const ShapeDecoration(
+                              shape: CircleBorder(),
+                              color: Colors.white,
+                            ),
+                            child: IconButton.filled(
                               onPressed: () {
                                 showEditDialog(expense);
-                              },
+                              }, 
+                              icon: const Icon(Icons.edit),
+                              color: Colors.green,
                             ),
-                            IconButton(
+                          ),
+                          const SizedBox(width: 8),
+                          Ink(
+                            decoration: const ShapeDecoration(
+                              shape: CircleBorder(),
+                              color: Colors.white,
+                            ),
+                            child: IconButton.filled(
                               icon: const Icon(Icons.delete),
                               onPressed: () {
                                 showDeleteDialog(expense);
                               },
+                              color: Colors.red,
                             ),
-                          ],
-                        ),
-                      );
-                    },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const Divider(), // Tạo đường ngăn cách giữa các ngày
-                ],
-              ),
+                )),
+                
+              ],
             );
           },
         ),

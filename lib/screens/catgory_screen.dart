@@ -224,35 +224,81 @@ class CategoryScreenState extends State<CategoryScreen> {
       appBar: AppBar(
         title: const Text('Categories'),
       ),
-      body: ListView.builder(
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-
-          final category = categories[index];
-
-          return ListTile(
-            leading: Text(category.iconText, style: const TextStyle(fontSize: 16)),
-            title: Text(category.name),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    // show dialog chỉnh sửa danh mục
-                    showEditDialog(category);
-                  },
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ListView.builder(
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+      
+            final category = categories[index];
+      
+            return Card(
+              color: Colors.lightBlueAccent,
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(category.iconText),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    showDeleteDialog(category);
-                  },
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Ink(
+                      decoration: const ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4))
+                        ),
+                        color: Colors.white
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 2.0, right: 8.0, bottom: 2.0),
+                        child: Text(
+                          category.name, 
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          )
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Ink(
+                      decoration: const ShapeDecoration(
+                        shape: CircleBorder(),
+                        color: Colors.white,
+                      ),
+                      child: IconButton.filled(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          // show dialog chỉnh sửa danh mục
+                          showEditDialog(category);
+                        },
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Ink(
+                      decoration: const ShapeDecoration(
+                        shape: CircleBorder(),
+                        color: Colors.white,
+                      ),
+                      child: IconButton.filled(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          showDeleteDialog(category);
+                        },
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
