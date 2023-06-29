@@ -135,7 +135,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               thickness: 2,
             ),
 
-            Row(
+            Wrap(
               children: getSortedCategoryStatistics(filteredExpenses)
               .map((i) => Padding(
                 padding: const EdgeInsets.only(left: 4.0, right: 4.0),
