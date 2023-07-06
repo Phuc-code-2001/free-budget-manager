@@ -40,7 +40,7 @@ class ExpenseScreenState extends State<ExpenseScreen> {
     saveExpenses();
   }
 
-  void saveExpenses() {
+  Future<void> saveExpenses() async {
     List<String> expenseStrings = expenses.map((expense) {
       return json.encode(expense.toJson());
     }).toList();
@@ -72,14 +72,23 @@ class ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   void showAddDialog() {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController amountController = TextEditingController();
     Category selectedCategory = categories[0];
     DateTime selectedDate = DateTime.now();
+    Expense sampleExpense = Expense(
+        name: "Ăn sáng",
+        amount: 35,
+        date: selectedDate,
+        category: selectedCategory);
+    bool created = false;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        TextEditingController nameController = TextEditingController();
+        TextEditingController amountController = TextEditingController();
+        nameController.text = sampleExpense.name;
+        amountController.text = sampleExpense.amount.toStringAsFixed(0);
+
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -165,20 +174,12 @@ class ExpenseScreenState extends State<ExpenseScreen> {
                 TextButton(
                   child: const Text('Save'),
                   onPressed: () {
-                    String name = nameController.text;
+                    sampleExpense.name = nameController.text;
                     double? amount = double.tryParse(amountController.text);
-                    Expense newExpense = Expense(
-                      name: name,
-                      amount: amount ?? 0,
-                      date: selectedDate,
-                      category: selectedCategory,
-                    );
-
-                    setState(() {
-                      expenses.add(newExpense);
-                      sortExpensesByDate();
-                    });
-
+                    sampleExpense.amount = amount ?? 0;
+                    sampleExpense.date = selectedDate;
+                    sampleExpense.category = selectedCategory;
+                    created = true;
                     Navigator.of(context).pop();
                   },
                 ),
@@ -188,21 +189,29 @@ class ExpenseScreenState extends State<ExpenseScreen> {
         );
       },
     ).then((_) {
-      setState(() {}); // Update the widget after returning from the dialog
+      if (created) {
+        setState(() {
+          expenses.add(sampleExpense);
+        }); // Update the widget after returning from the dialog
+        sortExpensesByDate();
+        saveExpenses();
+      }
     });
   }
 
   void showEditDialog(Expense expense) {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController amountController = TextEditingController();
-    nameController.text = expense.name;
-    amountController.text = expense.amount.toStringAsFixed(0);
-    Category selectedCategory = expense.category;
-    DateTime selectedDate = expense.date;
+    bool edited = false;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        TextEditingController nameController = TextEditingController();
+        TextEditingController amountController = TextEditingController();
+        nameController.text = expense.name;
+        amountController.text = expense.amount.toStringAsFixed(0);
+        Category selectedCategory = expense.category;
+        DateTime selectedDate = expense.date;
+
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -297,10 +306,7 @@ class ExpenseScreenState extends State<ExpenseScreen> {
                         double.tryParse(amountController.text) ?? 0;
                     expense.category = selectedCategory;
                     expense.date = selectedDate;
-
-                    setState(() {
-                      sortExpensesByDate();
-                    });
+                    edited = true;
 
                     Navigator.of(context).pop();
                   },
@@ -311,11 +317,17 @@ class ExpenseScreenState extends State<ExpenseScreen> {
         );
       },
     ).then((_) {
-      setState(() {}); // Update the widget after returning from the dialog
+      if (edited) {
+        setState(() {
+          sortExpensesByDate();
+        }); // Update the widget after returning from the dialog
+        saveExpenses();
+      }
     });
   }
 
   void showDeleteDialog(Expense expense) {
+    bool confirmed = false;
     // Hiển thị hộp thoại xác nhận xóa danh mục
     showDialog(
       context: context,
@@ -333,18 +345,19 @@ class ExpenseScreenState extends State<ExpenseScreen> {
             child: const Text('Xóa'),
             onPressed: () {
               // Xóa danh mục và cập nhật giao diện
-              deleteExpense(expense);
+              confirmed = true;
               Navigator.pop(context);
             },
           ),
         ],
       ),
-    );
-  }
-
-  void deleteExpense(Expense expense) {
-    setState(() {
-      expenses.remove(expense);
+    ).then((_) {
+      if (confirmed) {
+        setState(() {
+          expenses.remove(expense);
+        });
+        saveExpenses();
+      }
     });
   }
 
@@ -377,100 +390,96 @@ class ExpenseScreenState extends State<ExpenseScreen> {
                       backgroundColor: Colors.white,
                     ),
                     trailing: Chip(
-                        label: Text("Total: ${totalAmount.toStringAsFixed(0)}"),
-                        labelStyle: const TextStyle(color: Colors.blue),
-                        backgroundColor: Colors.white,
+                      label: Text("Total: ${totalAmount.toStringAsFixed(0)}"),
+                      labelStyle: const TextStyle(color: Colors.blue),
+                      backgroundColor: Colors.white,
                     ),
                   ),
                 ),
                 ...expensesByDate.map((expense) => Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                  child: Card(
-                    color: Colors.lightBlueAccent,
-                    child: ListTile(
-                      titleAlignment: ListTileTitleAlignment.center,
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: Text(expense.category.iconText),
-                      ),
-                      title: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Ink(
-                            decoration: const ShapeDecoration(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(4))
-                              ),
-                              color: Colors.amberAccent
+                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                      child: Card(
+                        color: Colors.lightBlueAccent,
+                        child: ListTile(
+                          titleAlignment: ListTileTitleAlignment.center,
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Text(expense.category.iconText),
+                          ),
+                          title: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Ink(
+                                decoration: const ShapeDecoration(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(4))),
+                                    color: Colors.amberAccent),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0,
+                                      top: 2.0,
+                                      right: 8.0,
+                                      bottom: 2.0),
+                                  child: Text(expense.category.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      )),
+                                ),
+                              )
+                            ],
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(left: 2.0, top: 2.0),
+                            child: Text(
+                              expense.name,
+                              style: const TextStyle(color: Colors.black),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8.0, top: 2.0, right: 8.0, bottom: 2.0),
-                              child: Text(
-                                expense.category.name, 
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(expense.amount.toStringAsFixed(0),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  )),
+                              const SizedBox(width: 8),
+                              Ink(
+                                decoration: const ShapeDecoration(
+                                  shape: CircleBorder(),
                                   color: Colors.white,
-                                )
+                                ),
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    showEditDialog(expense);
+                                  },
+                                  icon: const Icon(Icons.edit),
+                                  color: Colors.green,
+                                ),
                               ),
-                            ),
-                          )
-                        ],
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(left: 2.0, top: 2.0),
-                        child: Text(
-                          expense.name,
-                          style: const TextStyle(
-                            color: Colors.black
+                              const SizedBox(width: 8),
+                              Ink(
+                                decoration: const ShapeDecoration(
+                                  shape: CircleBorder(),
+                                  color: Colors.white,
+                                ),
+                                child: IconButton.filled(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    showDeleteDialog(expense);
+                                  },
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            expense.amount.toStringAsFixed(0),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.white,
-                            )
-                          ),
-                          const SizedBox(width: 8),
-                          Ink(
-                            decoration: const ShapeDecoration(
-                              shape: CircleBorder(),
-                              color: Colors.white,
-                            ),
-                            child: IconButton.filled(
-                              onPressed: () {
-                                showEditDialog(expense);
-                              }, 
-                              icon: const Icon(Icons.edit),
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Ink(
-                            decoration: const ShapeDecoration(
-                              shape: CircleBorder(),
-                              color: Colors.white,
-                            ),
-                            child: IconButton.filled(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                showDeleteDialog(expense);
-                              },
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )),
-                
+                    )),
               ],
             );
           },
