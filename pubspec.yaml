@@ -13,6 +13,7 @@ dependencies:
   intl: ^0.17.0
   shared_preferences: ^2.0.12
   fl_chart: ^0.63.0
+  google_fonts: ^5.1.0
 
 dev_dependencies:
   flutter_test:
